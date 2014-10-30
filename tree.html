@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tree</title>
+
+  <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.1/themes/base/jquery-ui.css">
+  <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1/themes/start/jquery-ui.css" />
+  <link rel="stylesheet" href="fancytree/skin-win7/ui.fancytree.css">
+
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js" type="text/javascript"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1/jquery-ui.min.js" type="text/javascript"></script>
+  <script src="fancytree/jquery.fancytree.js" type="text/javascript"></script>
+
+<style>
+
+.tree-title-top {
+	display: inline-block;
+	border: 1px solid #333;
+	border-radius: 5px;
+	padding: 1px 5px;
+	vertical-align: middle;
+	font-weight: bold;
+	font-size: 110%;
+}
+
+.tree-title-folder {
+	display: inline-block;
+	border: 1px solid #999;
+	border-radius: 3px;
+	padding: 0px 4px;
+	vertical-align: middle;
+	font-weight: bold;
+	font-size: 90%;
+}
+
+.tree-title-example {
+	display: inline-block;
+	font-style: italic;
+	vertical-align: middle;
+}
+
+.tree-title-latin {
+	font-style: italic;
+}
+
+#selection {
+	overflow: auto;
+	width: 390px;
+	height: 100px;
+	border: 1px dotted #999;
+	margin: 5px 0;
+	padding: 4px;
+}
+
+#tree {
+	width: 400px;
+}
+
+</style>
+
+<script type="text/javascript">
+
+$(function(){
+
+	var source = {
+		url: "tree.json",
+		cache: true
+	};
+
+	// see list of options at
+	// http://www.wwwendt.de/tech/fancytree/doc/jsdoc/global.html#FancytreeOptions
+	var tree = {
+		source: source,
+		icons: false,
+		checkbox: true,
+		selectMode: 3
+	};
+
+	tree.postProcess = function(event, data){
+
+		var response = data.response;
+
+		if (response.status == 'ok'){
+			data.result = response.data;
+		}
+		else {
+			data.result = {
+				error: 'Server error'
+			};
+		}
+	};
+
+	tree.defaultKey = function(node){
+		return node.data.id;
+	};
+
+	tree.renderTitle = function(event, data) {
+
+		var node = data.node,
+			item = node.data;
+
+		if (node.statusNodeType){
+			// skip status node
+		}
+		else if (!node.parent.parent){
+			node.title = '<span class="tree-title-top">' + item.name + ': ' + item.count + '</span>';
+		}
+		else if (node.children){
+			node.title = '<span class="tree-title-folder">' + item.name + ': ' + item.count + '</span> ' +
+						 '<span class="tree-title-example">' + (item.example ? 'e.g. ' : '') + item.example + '</span>';
+		}
+		else if (item.english) {
+			node.title = '<span class="tree-title-latin">' + item.latin + '</span> (' + item.english + ')';
+		}
+		else {
+			node.title = '<span class="tree-title-latin">' + item.latin + '</span>';
+		}
+	};
+
+
+	tree.select = function(event, data){
+
+		var i, s = '', a = data.tree.getSelectedNodes();
+
+		for (i=0; i<a.length; i++){
+			if (!a[i].parent.selected || a[i].data.top){
+				s += '<div>' + a[i].key + '</div>';
+			}
+		}
+
+		$('#selection').html(s);
+	};
+
+
+	$("#tree").html('');
+	$("#tree").fancytree(tree);
+});
+</script>
+</head>
+<body>
+  <div id="selection">Select items from the tree below</div>
+  <div id="tree">Loading...</div>
+</body>
+</html>
